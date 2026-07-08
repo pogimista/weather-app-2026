@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Weather</string>
+
+    <!-- Home -->
+    <string name="home_placeholder_title">Weather</string>
+
+    <!-- Actions -->
+    <string name="action_back">Back</string>
+    <string name="action_retry">Retry</string>
+
+    <!-- Errors -->
+    <string name="error_network">No internet connection</string>
+    <string name="error_not_found">Not found</string>
+    <string name="error_unauthorized">Unauthorized access</string>
+    <string name="error_server">Server error, please try again</string>
+    <string name="error_http">HTTP error %d</string>
+    <string name="error_unexpected">Something went wrong</string>
+</resources>
