@@ -1,5 +1,8 @@
 package com.mista.weather.home.presentation
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,11 +14,16 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mista.weather.R
 import com.mista.weather.ui.components.BaseScreen
@@ -30,8 +38,28 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val colors = AppColors.colors
+    val context = LocalContext.current
     val weatherState by viewModel.weatherState.collectAsStateWithLifecycle()
     val historyState by viewModel.historyState.collectAsStateWithLifecycle()
+    val locationPermissionGranted by viewModel.locationPermissionGranted.collectAsStateWithLifecycle()
+
+    var permissionRequested by rememberSaveable { mutableStateOf(false) }
+    var canShowRationale by rememberSaveable { mutableStateOf(true) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { results ->
+        val granted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        permissionRequested = true
+        if (!granted) {
+            canShowRationale = context.findActivity()?.let {
+                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION)
+            } ?: true
+        }
+        viewModel.onLocationPermissionResult(granted)
+    }
+    val permanentlyDenied = permissionRequested && !locationPermissionGranted && !canShowRationale
 
     val tabTitles = listOf(
         stringResource(R.string.home_tab_current),
@@ -71,7 +99,22 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
             ) { page ->
                 when (page) {
-                    0 -> CurrentWeatherTab(state = weatherState, onRetry = viewModel::retry)
+                    0 -> CurrentWeatherTab(
+                        state = weatherState,
+                        onRetry = viewModel::retry,
+                        showLocationPrompt = !locationPermissionGranted,
+                        permanentlyDenied = permanentlyDenied,
+                        onRequestLocation = {
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                ),
+                            )
+                        },
+                        onOpenSettings = { context.startActivity(locationSettingsIntent(context.packageName)) },
+                    )
+
                     else -> WeatherHistoryTab(entries = historyState)
                 }
             }

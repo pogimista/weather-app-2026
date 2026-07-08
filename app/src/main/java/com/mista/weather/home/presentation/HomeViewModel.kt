@@ -1,11 +1,18 @@
 package com.mista.weather.home.presentation
 
+import android.Manifest
+import android.app.Application
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
+import com.mista.weather.base.BaseUseCase
 import com.mista.weather.base.BaseViewModel
 import com.mista.weather.base.BaseViewModelDeps
 import com.mista.weather.base.error.toAppError
 import com.mista.weather.home.data.WeatherHistoryRepository
+import com.mista.weather.home.domain.Coordinates
 import com.mista.weather.home.domain.GetCurrentWeatherUseCase
+import com.mista.weather.home.domain.GetDeviceLocationUseCase
 import com.mista.weather.home.domain.WeatherHistoryEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +21,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     deps: BaseViewModelDeps,
     private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase,
+    private val getDeviceLocationUseCase: GetDeviceLocationUseCase,
     private val weatherHistoryRepository: WeatherHistoryRepository,
 ) : BaseViewModel(deps) {
 
@@ -23,19 +31,25 @@ class HomeViewModel(
     private val _historyState = MutableStateFlow<List<WeatherHistoryEntry>>(weatherHistoryRepository.getHistory())
     val historyState = _historyState.asStateFlow()
 
-    private var lastLat: Double = DEFAULT_LAT
-    private var lastLon: Double = DEFAULT_LON
+    private val _locationPermissionGranted = MutableStateFlow(hasLocationPermission())
+    val locationPermissionGranted = _locationPermissionGranted.asStateFlow()
 
     init {
         loadWeather()
     }
 
-    fun loadWeather(lat: Double = lastLat, lon: Double = lastLon) {
-        lastLat = lat
-        lastLon = lon
+    fun retry() = loadWeather()
+
+    fun onLocationPermissionResult(granted: Boolean) {
+        _locationPermissionGranted.value = granted
+        loadWeather()
+    }
+
+    private fun loadWeather() {
         viewModelScope.launch {
             _weatherState.value = HomeUiState.Loading
-            getCurrentWeatherUseCase(GetCurrentWeatherUseCase.Params(lat = lat, lon = lon))
+            val coordinates = resolveCoordinates()
+            getCurrentWeatherUseCase(coordinates)
                 .onSuccess { weather ->
                     _weatherState.value = HomeUiState.Success(weather)
                     weatherHistoryRepository.addEntry(weather)
@@ -45,10 +59,18 @@ class HomeViewModel(
         }
     }
 
-    fun retry() = loadWeather()
+    private suspend fun resolveCoordinates(): Coordinates {
+        if (!hasLocationPermission()) return DEFAULT_COORDINATES
+        return getDeviceLocationUseCase(BaseUseCase.NoParams).getOrNull() ?: DEFAULT_COORDINATES
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val context = getApplication<Application>()
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
 
     private companion object {
-        const val DEFAULT_LAT = 44.34
-        const val DEFAULT_LON = 10.99
+        val DEFAULT_COORDINATES = Coordinates(lat = 44.34, lon = 10.99)
     }
 }
