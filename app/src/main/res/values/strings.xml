@@ -10,6 +10,8 @@
     <string name="home_humidity_label">Humidity</string>
     <string name="home_wind_label">Wind</string>
     <string name="home_wind_value">%1$.1f m/s</string>
+    <string name="home_sunrise_label">Sunrise</string>
+    <string name="home_sunset_label">Sunset</string>
     <string name="home_location">%1$s, %2$s</string>
     <string name="home_history_empty">Your weather history will show up here after your first fetch.</string>
     <string name="home_location_permission_title">Enable location</string>

@@ -18,5 +18,9 @@ fun WeatherResponseDto.toDomain(): Weather {
         condition = condition?.main.orEmpty(),
         description = condition?.description.orEmpty(),
         iconCode = condition?.icon.orEmpty(),
+        sunrise = sys?.sunrise ?: 0L,
+        sunset = sys?.sunset ?: 0L,
+        observedAt = dt,
+        timezoneOffsetSeconds = timezone,
     )
 }

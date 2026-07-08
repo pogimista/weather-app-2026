@@ -160,7 +160,7 @@ private fun WeatherContent(weather: Weather, modifier: Modifier = Modifier) {
                     },
                     style = AppFonts.semiBold.copy(color = colors.white, fontSize = 18.sp),
                 )
-                Text(text = weatherEmoji(weather.condition), fontSize = 56.sp)
+                Text(text = weatherEmoji(weather), fontSize = 56.sp)
                 Text(
                     text = stringResource(R.string.home_temperature, weather.temperature),
                     style = AppFonts.bold.copy(color = colors.white, fontSize = 56.sp),
@@ -191,11 +191,29 @@ private fun WeatherContent(weather: Weather, modifier: Modifier = Modifier) {
                 value = stringResource(R.string.home_wind_value, weather.windSpeed),
             )
         }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            WeatherStatCard(
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.home_sunrise_label),
+                value = formatLocalTime(weather.sunrise, weather.timezoneOffsetSeconds),
+                icon = "🌅",
+            )
+            WeatherStatCard(
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.home_sunset_label),
+                value = formatLocalTime(weather.sunset, weather.timezoneOffsetSeconds),
+                icon = "🌇",
+            )
+        }
     }
 }
 
 @Composable
-private fun WeatherStatCard(label: String, value: String, modifier: Modifier = Modifier) {
+private fun WeatherStatCard(label: String, value: String, modifier: Modifier = Modifier, icon: String? = null) {
     val colors = AppColors.colors
 
     Column(
@@ -206,7 +224,10 @@ private fun WeatherStatCard(label: String, value: String, modifier: Modifier = M
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(text = label, style = AppFonts.regular.copy(color = colors.textSecondary))
-        Text(text = value, style = AppFonts.semiBold.copy(color = colors.textPrimary, fontSize = 18.sp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (icon != null) Text(text = icon, fontSize = 18.sp)
+            Text(text = value, style = AppFonts.semiBold.copy(color = colors.textPrimary, fontSize = 18.sp))
+        }
     }
 }
 

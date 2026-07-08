@@ -8,6 +8,8 @@ data class WeatherResponseDto(
     @Json(name = "main") val main: MainDto,
     @Json(name = "wind") val wind: WindDto? = null,
     @Json(name = "sys") val sys: SysDto? = null,
+    @Json(name = "dt") val dt: Long = 0L,
+    @Json(name = "timezone") val timezone: Long = 0L,
 )
 
 data class WeatherConditionDto(
@@ -31,4 +33,6 @@ data class WindDto(
 
 data class SysDto(
     @Json(name = "country") val country: String? = null,
+    @Json(name = "sunrise") val sunrise: Long = 0L,
+    @Json(name = "sunset") val sunset: Long = 0L,
 )

@@ -69,7 +69,7 @@ private fun WeatherHistoryItem(entry: WeatherHistoryEntry, modifier: Modifier = 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(text = weatherEmoji(entry.weather.condition), fontSize = 32.sp)
+        Text(text = weatherEmoji(entry.weather), fontSize = 32.sp)
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp),
